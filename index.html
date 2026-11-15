@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#080d18">
+    <title>SPHEREx Sky Motion Lab</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="SPHEREx Sky Motion Lab ana sayfa">
+        <span class="brand-mark" aria-hidden="true">✦</span>
+        <span>SPHEREx <strong>Sky Motion Lab</strong></span>
+      </a>
+      <div class="topbar-right">
+        <span class="mission-tag"><i></i> MISSION DATA EXPLORER</span>
+        <button class="button button-outline" id="upload-trigger" type="button">＋ Upload images</button>
+        <input id="image-files" type="file" accept="image/*,.fits,.fit,.fts" multiple hidden>
+      </div>
+    </header>
+
+    <main>
+      <section class="intro">
+        <div>
+          <p class="eyebrow">EXPLORE THE SKY THROUGH TIME</p>
+          <h1>Discover worlds <span>in motion.</span></h1>
+          <p class="intro-copy">Choose a sky position, explore observations across time, and investigate changing sources.</p>
+        </div>
+        <div class="data-badge"><span class="pulse"></span><span id="data-status">Searching the SPHEREx archive…</span></div>
+      </section>
+
+      <section class="workspace" aria-label="Sky viewer">
+        <aside class="sidebar">
+          <div class="panel-section">
+            <div class="section-title"><span class="step">01</span><h2>Sky position</h2></div>
+            <form id="coordinate-form">
+              <label for="ra">Right Ascension <span>RA · degrees</span></label>
+              <input id="ra" name="ra" type="number" step="any" min="0" max="360" value="133.79513" required>
+              <label for="dec">Declination <span>Dec · degrees</span></label>
+              <input id="dec" name="dec" type="number" step="any" min="-90" max="90" value="-7.24515" required>
+              <div class="field-row">
+                <div>
+                  <label for="fov">Field of view</label>
+                  <select id="fov">
+                    <option value="0.02">0.02°</option>
+                    <option value="0.1" selected>0.1°</option>
+                    <option value="0.2">0.2°</option>
+                    <option value="0.5">0.5°</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="band">Detector</label>
+                  <select id="band"></select>
+                </div>
+              </div>
+              <button class="button button-primary full-width" type="submit">Search SPHEREx <span aria-hidden="true">↗</span></button>
+            </form>
+          </div>
+
+          <div class="panel-section targets-section">
+            <div class="section-title"><span class="step">02</span><h2>Featured targets</h2></div>
+            <div class="target-list" id="target-list"></div>
+          </div>
+
+          <div class="sidebar-note">
+            <span class="info-icon">i</span>
+            <p>Real SPHEREx frames use their recorded observation dates. Without a real sequence, this separate catalog-motion preview shows a one-year proper-motion projection; it is not SPHEREx data or mission history.</p>
+          </div>
+        </aside>
+
+        <section class="viewer">
+          <div class="viewer-toolbar">
+            <div class="object-title">
+              <span class="object-dot"></span>
+              <div>
+                <strong id="object-name">WISE 0855</strong>
+                <small id="coordinate-label">08h 55m · −07° 14′</small>
+                <small id="motion-label"></small>
+              </div>
+            </div>
+            <div class="view-actions" role="group" aria-label="Display mode">
+                <button class="mode-button active" data-mode="blink" type="button" aria-pressed="true">Play</button>
+                <button class="mode-button" data-mode="overlay" type="button" aria-pressed="false">Overlay</button>
+                <button class="mode-button" data-mode="difference" type="button" aria-pressed="false">Difference</button>
+                <button class="icon-button" id="download" type="button" title="Download image" aria-label="Download image">↓</button>
+            </div>
+          </div>
+
+          <div class="canvas-wrap">
+            <canvas id="sky-canvas" width="1200" height="760" role="img" aria-label="Sky image"></canvas>
+            <div class="canvas-overlay overlay-top-left"><span class="crosshair">⊕</span><span id="canvas-coordinate">RA 133.7951° &nbsp; DEC −7.2452°</span><span id="orientation-label" class="orientation-label" hidden>N ↑ · E ←</span></div>
+            <div class="canvas-overlay overlay-top-right"><span id="band-label">SPHEREx-D2</span></div>
+            <div class="canvas-overlay overlay-bottom-left"><span class="demo-label"><i></i> 1-YEAR CATALOG PM PREVIEW</span></div>
+            <div class="canvas-overlay overlay-bottom-right"><span class="scale-line"></span><span id="scale-label">1°</span></div>
+            <div class="empty-state" id="empty-state" hidden>
+              <div class="empty-icon">✦</div>
+              <strong>Load observation images</strong>
+              <span>Select PNG, JPEG, or 2D FITS files.</span>
+              <button class="button button-outline" id="empty-upload" type="button">Choose files</button>
+            </div>
+          </div>
+
+          <div class="timeline">
+            <div class="timeline-controls">
+              <button id="play" class="play-button" type="button" aria-label="Play">▶</button>
+              <button id="previous" class="step-button" type="button" aria-label="Previous frame">‹</button>
+              <button id="next" class="step-button" type="button" aria-label="Next frame">›</button>
+            </div>
+            <div class="timeline-track">
+              <div class="timeline-meta"><span id="frame-date">Catalog PM +0.00y</span><span id="frame-count">1 / 8</span></div>
+              <input id="timeline-slider" type="range" min="0" max="7" value="0" aria-label="Observation timeline">
+              <div class="timeline-ticks" id="timeline-ticks"></div>
+            </div>
+            <label class="speed-control">SPEED
+              <select id="speed">
+                <option value="1200">0.5×</option>
+                <option value="700" selected>1×</option>
+                <option value="350">2×</option>
+              </select>
+            </label>
+          </div>
+          <div class="viewer-footer">
+            <span id="frame-caption">1-year catalog PM preview · representative field</span>
+            <span id="frame-dimensions">1200 × 760 px</span>
+          </div>
+        </section>
+      </section>
+
+      <section class="insight-strip">
+        <article><span class="insight-icon">⌁</span><div><strong id="observation-count">8</strong><small id="frame-count-label">PM demo steps</small></div></article>
+        <article><span class="insight-icon">◉</span><div><strong>102</strong><small>infrared bands</small></div></article>
+        <article><span class="insight-icon">✧</span><div><strong id="mode-description">Play through time</strong><small>image comparison mode</small></div></article>
+        <p>Shareable link: coordinates are saved in the URL.</p>
+      </section>
+
+      <section class="assistant-section" aria-labelledby="assistant-title">
+        <div class="section-title"><span class="step">03</span><h2 id="assistant-title">Astro FAQ Assistant</h2></div>
+        <p class="assistant-intro">Get instant answers to common astronomy and SPHEREx questions. Select a question below or type one.</p>
+        <div class="faq-quick-questions" aria-label="Frequently asked questions">
+          <button type="button" data-faq-question="What is SPHEREx?">What is SPHEREx?</button>
+          <button type="button" data-faq-question="When did SPHEREx launch?">When did it launch?</button>
+          <button type="button" data-faq-question="What does the one-year preview show?">What is the one-year preview?</button>
+          <button type="button" data-faq-question="What is proper motion?">What is proper motion?</button>
+        </div>
+        <div class="assistant-messages" id="assistant-messages" role="log" aria-live="polite" aria-relevant="additions text">
+          <article class="assistant-message assistant-reply">
+            <strong>Astro FAQ</strong>
+            <p>Hi! Choose a common question or ask about SPHEREx, its infrared bands, the motion preview, or the selected target.</p>
+          </article>
+        </div>
+        <form class="assistant-form" id="assistant-form">
+          <label class="sr-only" for="assistant-input">Your astronomy FAQ question</label>
+          <input id="assistant-input" name="question" type="text" maxlength="2000" placeholder="Ask a common astronomy question…" required>
+          <button class="button button-primary" id="assistant-submit" type="submit">Answer</button>
+        </form>
+        <p class="assistant-disclaimer" id="assistant-status">Instant answers from the built-in astronomy FAQ. No AI model, API key, or extra model memory required.</p>
+      </section>
+
+      <section class="about-section" aria-labelledby="about-title">
+        <div class="section-title"><span class="step">04</span><h2 id="about-title">About Us</h2></div>
+        <p>We are a group of space enthusiasts studying at Uğur Schools in Edremit, Türkiye. We created SPHEREx Sky Motion Lab to make exploring the changing sky more accessible and engaging.</p>
+        <p>Our project brings together real SPHEREx observations when available and clearly labeled catalog-based motion visualizations. The one-year catalog-motion preview is separate from SPHEREx's mission timeline.</p>
+      </section>
+
+      <section class="about-section references-section" aria-labelledby="references-title">
+        <div class="section-title"><span class="step">05</span><h2 id="references-title">References</h2></div>
+        <ol>
+          <li><a href="https://science.nasa.gov/mission/spherex/" target="_blank" rel="noopener noreferrer">NASA. “SPHEREx Mission.”</a> Mission overview, objectives, and launch information.</li>
+          <li><a href="https://irsa.ipac.caltech.edu/data/SPHEREx/docs/overview_dr1.html" target="_blank" rel="noopener noreferrer">NASA/IPAC Infrared Science Archive (IRSA). “SPHEREx Data Release 1 Overview.”</a> Archive products, observing wavelength range, and data citation guidance. <a href="https://doi.org/10.26131/IRSA678" target="_blank" rel="noopener noreferrer">DR1 Spectral Images DOI: 10.26131/IRSA678</a>.</li>
+          <li><a href="https://irsa.ipac.caltech.edu/data/SPHEREx/docs/overview_qr.html" target="_blank" rel="noopener noreferrer">IRSA. “SPHEREx Quick Release Overview.”</a> Documentation for QR3 spectral images queried by the app. <a href="https://doi.org/10.26131/IRSA662" target="_blank" rel="noopener noreferrer">QR3 DOI: 10.26131/IRSA662</a>.</li>
+          <li><a href="https://irsa.ipac.caltech.edu/ibe/sia.html" target="_blank" rel="noopener noreferrer">IRSA. “Simple Image Access v2 Queries.”</a> Documentation for the archive query interface used by this project.</li>
+          <li><a href="https://www.cosmos.esa.int/web/gaia/data-release-3" target="_blank" rel="noopener noreferrer">European Space Agency, Gaia Data Processing and Analysis Consortium. “Gaia Data Release 3.”</a> Release documentation for catalog astrometry and proper-motion context.</li>
+          <li><a href="https://fits.gsfc.nasa.gov/fits_standard.html" target="_blank" rel="noopener noreferrer">NASA/GSFC. “FITS Standard Document.”</a> Official reference for the Flexible Image Transport System format.</li>
+        </ol>
+        <p>Accessed November 15, 2026. Data products and archive contents may be updated.</p>
+      </section>
+    </main>
+
+    <footer><span>SPHEREx Sky Motion Lab</span><span>Exploration begins with a second look at the sky.</span></footer>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
